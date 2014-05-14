@@ -1,0 +1,18 @@
+*.py[cod]
+
+space_inventory.sqlite
+
+demo/
+
+# Dont put settings.py upstream
+inv/settings.py
+local_settings.py
+
+# IDE Stuff
+.settings/
+.pydevproject
+.idea
+.project
+
+# Collected static files
+static_root/

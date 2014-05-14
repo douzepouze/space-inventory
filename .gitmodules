@@ -1,0 +1,3 @@
+[submodule "thirdparty/lightbox"]
+	path = thirdparty/lightbox
+	url = https://github.com/ashleydw/lightbox.git

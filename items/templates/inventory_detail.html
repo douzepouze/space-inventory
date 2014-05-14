@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load admin_urls %}
+{% load mptt_tags %}
+{% load items_tags %}
+{% load markdown_deux_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <ol class="breadcrumb">
+            {% recursetree inventory.type.get_ancestors %}
+                <li><a href="{% url 'items:inventory_list' %}?type={{ node.pk }}">{{ node.name }}</a></li>
+                {% if not node.is_leaf_node %}
+                    {{ children }}
+                {% endif %}
+            {% endrecursetree %}
+            <li class="active"> <a
+                    href="{% url 'items:inventory_list' %}?type={{ inventory.type.pk }}&amp;type_exact=1">{{ inventory.type.name }}</a></li>
+        </ol>
+        <h1 id="inventory-description">{{ inventory.unique_name }}
+            <small>{{ inventory.manufacturer }}</small>
+            {% if perms.items.change_inventory %}
+                <a href="{% url 'admin:items_inventory_change' inventory.id %}" class="btn btn-primary" role="button">Edit</a>
+            {% endif %}</h1>
+
+
+{#        {% parse_rst inventory.description descheader %}#}
+{#        {{ descheader }}#}
+        {{ inventory.description|markdown }}
+        <h2 id="inventory-photos">Photos</h2>
+        <div class="row">
+            {% for photo in inventory.inventoryphoto_set.all %}
+                <div class="col-md-2 col-xs-2 col-sm-2">
+                    <a href="{{ photo.get_display_url }}" data-toggle="lightbox" data-gallery="inventory_photos"
+                       data-parent data-title="{{ photo.title }}" data-footer="{{ photo.caption }}">
+                        <img src="{{ photo.get_thumbnail_url }}" class="img-responsive">
+                    </a>
+                </div>
+                {% if forloop.counter|divisibleby:"6" %}
+                    </div>
+                    <div class="row">
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="row">
+            {% if user.is_authenticated %}
+            {% bootstrap_formset_errors formset %}
+            <form action="" method="post" accept-charset="utf-8" enctype="multipart/form-data" class="form-inline">{% csrf_token %}
+                {% bootstrap_formset formset layout='inline' %}
+                {% buttons submit='OK' reset="Cancel" %}{% endbuttons %}
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-4">
+     <div class="panel panel-default">
+            <div class="panel-heading">Terms of Use</div>
+                       <div class="panel-body">
+                {{ inventory.usage_terms }}
+            </div>
+             <table class="table overflowable">
+                 <thead>
+                 <tr>
+                     <td>Approp.</td>
+                     <td>Inapprop.</td>
+                     <td>Invest.</td>
+                     <td>Alter</td>
+                     <td>Take away</td>
+                     <td>Exploit</td>
+                 </tr>
+                 </thead>
+                    <tbody>
+                    <tr>
+                        <td width="16.6%">{% item_usage inventory.usage_appropriate %}</td>
+
+                        <td width="16.6%">{% item_usage inventory.usage_inappropriate %}</td>
+
+                        <td width="16.6%">{% item_usage inventory.usage_investigate %}</td>
+
+                        <td width="16.6%">{% item_usage inventory.usage_alter %}</td>
+                        <td width="16.6%">{% item_usage inventory.usage_takeaway %}</td>
+
+                        <td width="16.6%">{% item_usage inventory.usage_exploit %}</td>
+                 </tr>
+                    </tbody>
+                </table>
+        </div>
+       <div class="panel panel-default">
+            <div class="panel-heading">Basic Information </div>
+            <div class="panel-body">
+                </div>
+                <table class="table">
+                    <tbody>
+                    <tr>
+                        <td>Product Name</td>
+                        <td>{{ inventory.name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Attributes</td>
+                        <td>
+                            {% if inventory.movable %}<span class="label label-info" data-toggle="tooltip" data-placement="top" title="Item is kind of easily displaceable (e.g. a screwdriver vs. fridge)">Movable</span>{% endif %}
+                            {% if inventory.consumable %}<span class="label label-info" data-toggle="tooltip" data-placement="top" title="Item is consumable (e.g. tool vs. electric component">Consumable</span>{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Location</td>
+                        <td>{{ inventory.location }}<span class="help-block">{{ inventory.location_hint }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>UUID</td>
+                        <td>{{ inventory.uuid }}</td>
+                    </tr>
+                    <tr>
+                        <td>Serial</td>
+                        <td>{{ inventory.serial }}</td>
+                    </tr>
+                    <tr>
+                        <td>Conditional</td>
+                        <td>{{ inventory.get_condition_display }}</td>
+                    </tr>
+                    <tr>
+                        <td>Availability</td>
+                        <td>
+                            {{ inventory.get_availability_display }}
+                            {% if inventory.availability == "LIMITED" %}
+                                (From {{ inventory.available_from|date}} to {{ inventory.available_to|date}})
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Resp. People</td>
+                        <td>{% for respons_pers in inventory.inventoryownershipresponsibility_set.all %}
+                            <a href="{% url 'items:inventory_list' %}?person_name={{ respons_pers.person.username|urlencode }}">{{ respons_pers.person.username }}</a>
+                            {% if respons_pers.is_owner %}
+                                <small class="text-muted">(Owner)</small>
+                            {% endif %}{% if not forloop.last %},{% endif %}
+                        {% endfor %}</td>
+                    </tr>
+                    <tr>
+                        <td>Related Items</td>
+                        <td>{% for rel_item in inventory.related_items.all %}
+                            <a href="{{ rel_item.get_absolute_url }}">{{ rel_item.unique_name }}</a>
+                            {% if not forloop.last %},{% endif %}
+                        {% endfor %}</td>
+                    </tr>
+                    </tbody>
+                </table>
+       </div>
+       <div class="panel panel-default">
+        <div class="panel-heading">Location</div>
+        <ol class="breadcrumb">
+            {% recursetree inventory.location.get_ancestors %}
+                <li><a href="{% url 'items:location_show' node.uuid %}">{{ node.name }}</a></li>
+                {% if not node.is_leaf_node %}
+                    {{ children }}
+                {% endif %}
+            {% endrecursetree %}
+            <li class="active"> <a
+                    href="{% url 'items:location_show' inventory.location.uuid %}">{{ inventory.location.name }}</a></li>
+        </ol>
+           <div class="row">
+            {% for photo in inventory.get_location_path_photos %}
+                <div class="col-md-3 col-xs-3 col-sm-3">
+                    <a href="{{ photo.get_display_url }}" data-toggle="lightbox" data-gallery="location_photos"
+                       data-parent data-title="{{ photo.location.name }}{{ photo.title }}" data-footer="{{ photo.caption }}">
+                        <img src="{{ photo.get_thumbnail_url }}" class="img-responsive">
+                    </a>
+                </div>
+                {% if forloop.counter|divisibleby:"4" %}
+                    </div>
+                    <div class="row">
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
+       </div>
+    </div>
+
+{% endblock %}
+
+{% block bottom %}
+<script type="text/javascript">
+    $(document).ready(function ($) {
+       $('span.label').tooltip()
+    });
+</script>
+{% endblock %}

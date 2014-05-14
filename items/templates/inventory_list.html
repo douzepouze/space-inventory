@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% load mptt_tags %}
+
+{% block title %} Inventory Catalog {% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-horizontal" role="form" method="GET">
+        <div class="form-group">
+            <label for="inputLocation" class="col-sm-2 control-label">Location</label>
+            <div class="col-sm-2">
+                <select class="form-control" name="location_exact">
+                    <option value="0">Within</option>
+                    <option value="1"{% if search.location_exact %} selected="selected"{% endif %}>Exact</option>
+                </select>
+            </div>
+            <div class="col-sm-8">
+                <select class="form-control" id="inputLocation" name="location">
+                    <option value="-1">Wherever</option>
+                    {% for l in locations %}
+                        <option value="{{ l.id }}"{% if search.location == l.id %} selected="selected"{% endif %}>{{ l.depth_prefix|safe }}- {{ l.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="inputType" class="col-sm-2 control-label">Type</label>
+            <div class="col-sm-2">
+                <select class="form-control" name="type_exact">
+                    <option value="0">Within</option>
+                    <option value="1"{% if search.type_exact %} selected="selected"{% endif %}>Exact</option>
+                </select>
+            </div>
+            <div class="col-sm-8">
+                <select class="form-control" id="inputType" name="type">
+                    <option value="-1">Whatever</option>
+                    {% for t in types %}
+                        <option value="{{ t.id }}"{% if search.type == t.id %} selected="selected"{% endif %}>{{ t.depth_prefix|safe }}- {{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="inputPerson" class="col-sm-2 control-label">Person</label>
+            <div class="col-sm-2">
+                <select class="form-control" name="person_kind">
+                    <option value="3">Responsible</option>
+                    <option value="2"{% if search.person_kind == 2 %} selected="selected"{% endif %}>Owner</option>
+                    <option value="1"{% if search.person_kind == 1 %} selected="selected"{% endif %}>Non-Owner</option>
+                </select>
+            </div>
+            <div class="col-sm-8">
+                <input type="text" class="form-control" id="inputPerson" name="person_name" value="{{ search.person_name }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="inputText" class="col-sm-2 control-label">Text</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="inputText" name="text" value="{{ search.text }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="inputText" class="col-sm-2 control-label">Image filter</label>
+            <label class="radio-inline">
+              <input type="radio" name="image_filter" value="none" {% if search.image_filter == "none" %}checked{% endif %}>Deactivated
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="image_filter" value="onlywith" {% if search.image_filter == "onlywith" %}checked{% endif %}>Only items <em>with</em> images
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="image_filter" value="onlywithout" {% if search.image_filter == "onlywithout" %}checked{% endif %}>Only items <em>without</em> images
+            </label>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default">Filter</button>
+            </div>
+        </div>
+    </form>
+</div></div>
+
+    <table class="table table-condensed">
+    <thead>
+        <tr>
+            <th>Unique Name</th>
+            <th>Type</th>
+            <th>Location</th>
+        </tr>
+    </thead>
+    {% for i in inventorys %}
+        <tr>
+            <td><a href="{% url 'items:inventory_show' i.uuid %}">{{ i.unique_name }}</a> </td>
+            <td>{{ i.type.get_ancestors_self|tree_path }}</td>
+            <td>{{ i.location.get_ancestors_self|tree_path }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+
+<div class="row pagination_row">
+    <ul class="pagination">
+        <li {% if not inventorys.has_previous %}class="disabled"{% endif %}><a href="{% if inventorys.has_previous %}?page={{ inventorys.previous_page_number }}{{ search.params }}{% else %}#{% endif %}">Previous</a></li>
+
+        {% for page in inventorys.paginator.page_range %}
+            <li {% if inventorys.number == page %}class="active"{% endif %}><a href="?page={{ page }}{{ search.params }}">{{ page }}</a></li>
+        {% endfor %}
+         <li {% if not inventorys.has_next %}class="disabled"{% endif %}><a href="{% if inventorys.has_next %}?page={{ inventorys.next_page_number }}{{ search.params }}{% else %}#{% endif %}">Next</a></li>
+    </ul>
+
+
+<!-- Single button -->
+<div class="btn-group dropup">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Elements per Page ({{ epp }})<span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu">
+    {% for cur_epp in epp_list %}
+    <li {% if cur_epp == epp %} class="active"{% endif %}><a href="?epp={{ cur_epp }}{{ search.params }}" >{{ cur_epp }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+Django==1.6.4
+django-autoslug==1.7.2
+django-autoslug-field==0.2.3
+django-bootstrap3==5.1.1
+django-debug-toolbar==1.2.1
+django-markdown-deux==1.0.5
+django-model-utils==2.2
+django-mptt==0.6.0
+-e git+https://github.com/douzepouze/django-photologue.git#egg=django-photologue
+#django-photologue==3.2.dev0
+django-sortedm2m==0.9.3
+docutils==0.11
+markdown2==2.3.0
+Pillow==2.7.0
+reportlab==3.1.8
+South==0.8.4
+sqlparse==0.1.11
