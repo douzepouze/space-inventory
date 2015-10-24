@@ -26,13 +26,15 @@ def make_tree(objects):
     result = []
     nesting = [(None, iter(objects))]
     while len(nesting):
-        try:
-            l = next(nesting[-1][1])
-        except:
+        l = next(nesting[-1][1], None)
+
+        if not l:
             nesting.pop()
             continue
+
         if l.parent != nesting[-1][0]:
             continue
+
         # this is a workaround for the inability to repeat something in the templates
         l.depth_prefix = "&nbsp;" * (2 * (len(nesting) - 1))
         l.found_children = []
