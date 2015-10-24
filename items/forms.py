@@ -86,9 +86,6 @@ from models import Person, InventoryPhoto, LocationPhoto
 #         return cleaned_data
 
 
-class TestModelForm(forms.ModelForm):
-    class Meta:
-        model = User
 
 
 class TestInlineForm(forms.Form):

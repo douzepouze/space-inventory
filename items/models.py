@@ -9,31 +9,25 @@ import uuid
 # Django Imports
 from django.db import models
 from django.contrib import auth
-from django.conf import settings
-from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 from django.core.urlresolvers import reverse
 
 # 3rd Party Imports
-from autoslug.fields import AutoSlugField
-from autoslug.settings import slugify
-from south.modelsinspector import add_introspection_rules
 from mptt.models import MPTTModel, TreeForeignKey
-# from django_markdown.widgets import MarkdownWidget
 from photologue.models import ImageModel
 
 
 # South Rules
-add_introspection_rules([
-(
-    [models.CharField], # Class(es) these apply to
-    [],         # Positional arguments (not used)
-    {           # Keyword argument
-        "default": ["default", {"ignore_if": "default"}],
-    },
-),
-], ["^items\.(Location|Inventory)\.fields\.uuid"])
+# add_introspection_rules([
+# (
+#     [models.CharField], # Class(es) these apply to
+#     [],         # Positional arguments (not used)
+#     {           # Keyword argument
+#         "default": ["default", {"ignore_if": "default"}],
+#     },
+# ),
+# ], ["^items\.(Location|Inventory)\.fields\.uuid"])
 
 
 class MPTTModelMixin(object):
@@ -69,7 +63,7 @@ class Location(MPTTModel, MPTTModelMixin):
                                          max_length=255)
     description = models.TextField(blank=True)
     loc_type = models.CharField("Location Type", choices=LOCATION_CHOICES, max_length=255)
-    uuid = models.CharField('UUID', max_length=255, default=lambda: uuid.uuid4(), blank=True, editable=False)
+    uuid = models.UUIDField('UUID', default=uuid.uuid4, blank=True, editable=False)
 
     # TODO Remove in future, when "labels" app is created ...
     label_created = models.DateTimeField(blank=True, editable=False, null=True)
@@ -149,17 +143,16 @@ class Inventory(models.Model):
     )
     
     consumable = models.BooleanField(
-        help_text='ex: an resistor usually is consumable, an osciloscope usually not.'
+        help_text='ex: an resistor usually is consumable, an oscilloscope usually not.'
     )
     
     movable = models.BooleanField(
         help_text='movable in the sense of one can carry it. ex: oscilloscope: movable, giant roaring fridge: unmovable'
     )
 
-    uuid = models.CharField(
+    uuid = models.UUIDField(
         'UUID',
-        max_length=255,
-        default=lambda: uuid.uuid4(),
+        default=uuid.uuid4,
         blank=True,
         editable=False
     )

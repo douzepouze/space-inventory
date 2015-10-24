@@ -1,372 +1,199 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import migrations, models
+import mptt.fields
+import photologue.models
+import django.contrib.auth.models
+import django.utils.timezone
+from django.conf import settings
+import items.models
+import django.core.validators
+import uuid
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'Location'
-        db.create_table(u'items_location', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('parent', self.gf('mptt.fields.TreeForeignKey')(blank=True, related_name='children', null=True, to=orm['items.Location'])),
-            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['items.Person'])),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('description_short', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('loc_type', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('uuid', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('label_created', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            (u'lft', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-            (u'rght', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-            (u'tree_id', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-            (u'level', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-        ))
-        db.send_create_signal(u'items', ['Location'])
+    dependencies = [
+        ('photologue', '0008_auto_20150509_1557'),
+        ('auth', '0006_require_contenttypes_0002'),
+    ]
 
-        # Adding model 'LocationPhoto'
-        db.create_table(u'items_locationphoto', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('image', self.gf('django.db.models.fields.files.ImageField')(max_length=100)),
-            ('date_taken', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('view_count', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
-            ('crop_from', self.gf('django.db.models.fields.CharField')(max_length=10, blank=True)),
-            ('effect', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='locationphoto_related', null=True, to=orm['photologue.PhotoEffect'])),
-            ('location', self.gf('mptt.fields.TreeForeignKey')(to=orm['items.Location'])),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
-            ('caption', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('date_added', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-        ))
-        db.send_create_signal(u'items', ['LocationPhoto'])
-
-        # Adding model 'InventoryType'
-        db.create_table(u'items_inventorytype', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('parent', self.gf('mptt.fields.TreeForeignKey')(blank=True, related_name='children', null=True, to=orm['items.InventoryType'])),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            (u'lft', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-            (u'rght', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-            (u'tree_id', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-            (u'level', self.gf('django.db.models.fields.PositiveIntegerField')(db_index=True)),
-        ))
-        db.send_create_signal(u'items', ['InventoryType'])
-
-        # Adding model 'Inventory'
-        db.create_table(u'items_inventory', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('unique_name', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('manufacturer', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('value', self.gf('django.db.models.fields.IntegerField')(default='0')),
-            ('consumable', self.gf('django.db.models.fields.BooleanField')()),
-            ('movable', self.gf('django.db.models.fields.BooleanField')()),
-            ('uuid', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('serial', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('location', self.gf('mptt.fields.TreeForeignKey')(to=orm['items.Location'], null=True)),
-            ('type', self.gf('mptt.fields.TreeForeignKey')(to=orm['items.InventoryType'])),
-            ('condition', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('availability', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('available_from', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            ('available_to', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            ('usage_appropriate', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('usage_inappropriate', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('usage_investigate', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('usage_alter', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('usage_takeaway', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('usage_exploit', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('usage_terms', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('mounted', self.gf('django.db.models.fields.BooleanField')()),
-            ('location_hint', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('label_created', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-        ))
-        db.send_create_signal(u'items', ['Inventory'])
-
-        # Adding model 'InventoryPhoto'
-        db.create_table(u'items_inventoryphoto', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('image', self.gf('django.db.models.fields.files.ImageField')(max_length=100)),
-            ('date_taken', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('view_count', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
-            ('crop_from', self.gf('django.db.models.fields.CharField')(max_length=10, blank=True)),
-            ('effect', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='inventoryphoto_related', null=True, to=orm['photologue.PhotoEffect'])),
-            ('inventory', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['items.Inventory'])),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
-            ('caption', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('date_added', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-        ))
-        db.send_create_signal(u'items', ['InventoryPhoto'])
-
-        # Adding model 'InventoryEquiptment'
-        db.create_table(u'items_inventoryequiptment', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('item', self.gf('django.db.models.fields.related.ForeignKey')(related_name='item', to=orm['items.Inventory'])),
-            ('equiptment', self.gf('django.db.models.fields.related.ForeignKey')(related_name='equiptment', to=orm['items.Inventory'])),
-            ('is_exclusive_equiptment', self.gf('django.db.models.fields.BooleanField')()),
-        ))
-        db.send_create_signal(u'items', ['InventoryEquiptment'])
-
-        # Adding model 'Person'
-        db.create_table(u'items_person', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('password', self.gf('django.db.models.fields.CharField')(max_length=128)),
-            ('last_login', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('is_superuser', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('username', self.gf('django.db.models.fields.CharField')(unique=True, max_length=30)),
-            ('first_name', self.gf('django.db.models.fields.CharField')(max_length=30, blank=True)),
-            ('last_name', self.gf('django.db.models.fields.CharField')(max_length=30, blank=True)),
-            ('email', self.gf('django.db.models.fields.EmailField')(max_length=75, blank=True)),
-            ('is_staff', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('is_active', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('date_joined', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('nickname', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('street', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('address_extra_mid', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('zip_code', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('city', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('state', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('country', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('address_extra_bot', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('info', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('irc', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('jabber', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('phone', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-            ('wiki', self.gf('django.db.models.fields.CharField')(max_length=255, blank=True)),
-        ))
-        db.send_create_signal(u'items', ['Person'])
-
-        # Adding M2M table for field groups on 'Person'
-        m2m_table_name = db.shorten_name(u'items_person_groups')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('person', models.ForeignKey(orm[u'items.person'], null=False)),
-            ('group', models.ForeignKey(orm[u'auth.group'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['person_id', 'group_id'])
-
-        # Adding M2M table for field user_permissions on 'Person'
-        m2m_table_name = db.shorten_name(u'items_person_user_permissions')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('person', models.ForeignKey(orm[u'items.person'], null=False)),
-            ('permission', models.ForeignKey(orm[u'auth.permission'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['person_id', 'permission_id'])
-
-        # Adding model 'InventoryOwnershipResponsibility'
-        db.create_table(u'items_inventoryownershipresponsibility', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('person', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['items.Person'])),
-            ('inventory', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['items.Inventory'])),
-            ('is_owner', self.gf('django.db.models.fields.BooleanField')()),
-        ))
-        db.send_create_signal(u'items', ['InventoryOwnershipResponsibility'])
-
-        # Adding unique constraint on 'InventoryOwnershipResponsibility', fields ['person', 'inventory']
-        db.create_unique(u'items_inventoryownershipresponsibility', ['person_id', 'inventory_id'])
-
-
-    def backwards(self, orm):
-        # Removing unique constraint on 'InventoryOwnershipResponsibility', fields ['person', 'inventory']
-        db.delete_unique(u'items_inventoryownershipresponsibility', ['person_id', 'inventory_id'])
-
-        # Deleting model 'Location'
-        db.delete_table(u'items_location')
-
-        # Deleting model 'LocationPhoto'
-        db.delete_table(u'items_locationphoto')
-
-        # Deleting model 'InventoryType'
-        db.delete_table(u'items_inventorytype')
-
-        # Deleting model 'Inventory'
-        db.delete_table(u'items_inventory')
-
-        # Deleting model 'InventoryPhoto'
-        db.delete_table(u'items_inventoryphoto')
-
-        # Deleting model 'InventoryEquiptment'
-        db.delete_table(u'items_inventoryequiptment')
-
-        # Deleting model 'Person'
-        db.delete_table(u'items_person')
-
-        # Removing M2M table for field groups on 'Person'
-        db.delete_table(db.shorten_name(u'items_person_groups'))
-
-        # Removing M2M table for field user_permissions on 'Person'
-        db.delete_table(db.shorten_name(u'items_person_user_permissions'))
-
-        # Deleting model 'InventoryOwnershipResponsibility'
-        db.delete_table(u'items_inventoryownershipresponsibility')
-
-
-    models = {
-        u'auth.group': {
-            'Meta': {'object_name': 'Group'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
-        },
-        u'auth.permission': {
-            'Meta': {'ordering': "(u'content_type__app_label', u'content_type__model', u'codename')", 'unique_together': "((u'content_type', u'codename'),)", 'object_name': 'Permission'},
-            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        u'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        u'items.inventory': {
-            'Meta': {'object_name': 'Inventory'},
-            'accessories': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'related_to'", 'symmetrical': 'False', 'through': u"orm['items.InventoryEquiptment']", 'to': u"orm['items.Inventory']"}),
-            'availability': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'available_from': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'available_to': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'condition': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'consumable': ('django.db.models.fields.BooleanField', [], {}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'label_created': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'location': ('mptt.fields.TreeForeignKey', [], {'to': u"orm['items.Location']", 'null': 'True'}),
-            'location_hint': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'manufacturer': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'mounted': ('django.db.models.fields.BooleanField', [], {}),
-            'movable': ('django.db.models.fields.BooleanField', [], {}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'persons': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['items.Person']", 'through': u"orm['items.InventoryOwnershipResponsibility']", 'symmetrical': 'False'}),
-            'serial': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'type': ('mptt.fields.TreeForeignKey', [], {'to': u"orm['items.InventoryType']"}),
-            'unique_name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_alter': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_appropriate': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_exploit': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_inappropriate': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_investigate': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_takeaway': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'usage_terms': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'value': ('django.db.models.fields.IntegerField', [], {'default': "'0'"})
-        },
-        u'items.inventoryequiptment': {
-            'Meta': {'object_name': 'InventoryEquiptment'},
-            'equiptment': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'equiptment'", 'to': u"orm['items.Inventory']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_exclusive_equiptment': ('django.db.models.fields.BooleanField', [], {}),
-            'item': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'item'", 'to': u"orm['items.Inventory']"})
-        },
-        u'items.inventoryownershipresponsibility': {
-            'Meta': {'unique_together': "(('person', 'inventory'),)", 'object_name': 'InventoryOwnershipResponsibility'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'inventory': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['items.Inventory']"}),
-            'is_owner': ('django.db.models.fields.BooleanField', [], {}),
-            'person': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['items.Person']"})
-        },
-        u'items.inventoryphoto': {
-            'Meta': {'object_name': 'InventoryPhoto'},
-            'caption': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'crop_from': ('django.db.models.fields.CharField', [], {'max_length': '10', 'blank': 'True'}),
-            'date_added': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'date_taken': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'effect': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'inventoryphoto_related'", 'null': 'True', 'to': u"orm['photologue.PhotoEffect']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100'}),
-            'inventory': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['items.Inventory']"}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'view_count': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'})
-        },
-        u'items.inventorytype': {
-            'Meta': {'object_name': 'InventoryType'},
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            u'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            u'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'parent': ('mptt.fields.TreeForeignKey', [], {'blank': 'True', 'related_name': "'children'", 'null': 'True', 'to': u"orm['items.InventoryType']"}),
-            u'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            u'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'})
-        },
-        u'items.location': {
-            'Meta': {'object_name': 'Location'},
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'description_short': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'label_created': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            u'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            u'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'loc_type': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['items.Person']"}),
-            'parent': ('mptt.fields.TreeForeignKey', [], {'blank': 'True', 'related_name': "'children'", 'null': 'True', 'to': u"orm['items.Location']"}),
-            u'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            u'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'})
-        },
-        u'items.locationphoto': {
-            'Meta': {'object_name': 'LocationPhoto'},
-            'caption': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'crop_from': ('django.db.models.fields.CharField', [], {'max_length': '10', 'blank': 'True'}),
-            'date_added': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'date_taken': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'effect': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'locationphoto_related'", 'null': 'True', 'to': u"orm['photologue.PhotoEffect']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100'}),
-            'location': ('mptt.fields.TreeForeignKey', [], {'to': u"orm['items.Location']"}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'view_count': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'})
-        },
-        u'items.person': {
-            'Meta': {'object_name': 'Person'},
-            'address_extra_bot': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'address_extra_mid': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'country': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'info': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'irc': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'jabber': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'nickname': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'phone': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'state': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'street': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
-            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'}),
-            'wiki': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'zip_code': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'})
-        },
-        u'photologue.photoeffect': {
-            'Meta': {'object_name': 'PhotoEffect'},
-            'background_color': ('django.db.models.fields.CharField', [], {'max_length': '7'}),
-            'brightness': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'color': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'contrast': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'filters': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'}),
-            'reflection_size': ('django.db.models.fields.FloatField', [], {'default': '0'}),
-            'reflection_strength': ('django.db.models.fields.FloatField', [], {'default': '0.6'}),
-            'sharpness': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'transpose_method': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'})
-        }
-    }
-
-    complete_apps = ['items']
+    operations = [
+        migrations.CreateModel(
+            name='Person',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('password', models.CharField(max_length=128, verbose_name='password')),
+                ('last_login', models.DateTimeField(null=True, verbose_name='last login', blank=True)),
+                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                ('username', models.CharField(error_messages={'unique': 'A user with that username already exists.'}, max_length=30, validators=[django.core.validators.RegexValidator('^[\\w.@+-]+$', 'Enter a valid username. This value may contain only letters, numbers and @/./+/-/_ characters.', 'invalid')], help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', unique=True, verbose_name='username')),
+                ('first_name', models.CharField(max_length=30, verbose_name='first name', blank=True)),
+                ('last_name', models.CharField(max_length=30, verbose_name='last name', blank=True)),
+                ('email', models.EmailField(max_length=254, verbose_name='email address', blank=True)),
+                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
+                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
+                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
+                ('nickname', models.CharField(help_text=b'ex: Miezekatze', max_length=255, verbose_name=b'Nickname')),
+                ('street', models.CharField(help_text='ex: Heilmannstra&szlig;e 30', max_length=255, verbose_name=b'Street', blank=True)),
+                ('address_extra_mid', models.CharField(help_text=b'ex: c/o the best of the best, sir', max_length=255, verbose_name=b'Address Extra Mid', blank=True)),
+                ('zip_code', models.CharField(help_text=b'ex: 82049', max_length=255, verbose_name=b'Zip Code', blank=True)),
+                ('city', models.CharField(help_text=b'ex: Pullach', max_length=255, verbose_name=b'City', blank=True)),
+                ('state', models.CharField(help_text=b'ex: Oberbayern', max_length=255, verbose_name=b'State', blank=True)),
+                ('country', models.CharField(help_text=b'ex: Germany', max_length=255, verbose_name=b'Country', blank=True)),
+                ('address_extra_bot', models.CharField(help_text=b'ex: aint no kiddin', max_length=255, verbose_name=b'Address Extra Bottom', blank=True)),
+                ('info', models.CharField(help_text=b'ex: Miep Miep', max_length=255, verbose_name=b'Info', blank=True)),
+                ('irc', models.CharField(help_text=b'ex: #cccac@irc.hackint.eu', max_length=255, verbose_name=b'IRC', blank=True)),
+                ('jabber', models.CharField(help_text=b'ex: miezekatze@jabber.ccc.de', max_length=255, verbose_name=b'Jabber', blank=True)),
+                ('phone', models.CharField(help_text=b'ex: 0049 1234 677899', max_length=255, verbose_name=b'Phone', blank=True)),
+                ('wiki', models.CharField(help_text=b'ex: URL to ur spaces wiki account/main page', max_length=255, verbose_name=b'Wiki', blank=True)),
+                ('groups', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Group', blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', verbose_name='groups')),
+                ('user_permissions', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Permission', blank=True, help_text='Specific permissions for this user.', verbose_name='user permissions')),
+            ],
+            options={
+                'abstract': False,
+                'verbose_name': 'user',
+                'verbose_name_plural': 'users',
+            },
+            managers=[
+                ('objects', django.contrib.auth.models.UserManager()),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Inventory',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('unique_name', models.CharField(help_text=b'ex: Rigol Electronics DS1102E DSO', max_length=255, verbose_name=b'unique name')),
+                ('manufacturer', models.CharField(help_text=b'ex: Rigol Electronics', max_length=255, verbose_name=b'manufacturer', blank=True)),
+                ('name', models.CharField(help_text=b'ex: DS1102E', max_length=255, verbose_name=b'product name', blank=True)),
+                ('value', models.IntegerField(default=b'0', help_text=b'ex: 370 <i>&euro;</i>', verbose_name=b'monetary value')),
+                ('consumable', models.BooleanField(help_text=b'ex: an resistor usually is consumable, an oscilloscope usually not.')),
+                ('movable', models.BooleanField(help_text=b'movable in the sense of one can carry it. ex: oscilloscope: movable, giant roaring fridge: unmovable')),
+                ('uuid', models.UUIDField(default=uuid.uuid4, verbose_name=b'UUID', editable=False, blank=True)),
+                ('serial', models.CharField(max_length=255, verbose_name=b'Serial Number/String', blank=True)),
+                ('condition', models.CharField(default=b'FUNC', max_length=100, choices=[(b'FUNC', b'Functional'), (b'LIMITED_FUNC', b'Limited Functional'), (b'UNFUNCT', b'Unfunctional'), (b'REPAIR', b'In Reparation'), (b'BRICKED', b'Bricked'), (b'DISPOSED', b'Disposed')])),
+                ('availability', models.CharField(default=b'UNLIMITED', max_length=100, choices=[(b'UNLIMITED', b'Unlimited'), (b'LIMITED', b'Limited'), (b'UNAVAILABLE', b'Unavailable')])),
+                ('available_from', models.DateField(null=True, blank=True)),
+                ('available_to', models.DateField(null=True, blank=True)),
+                ('usage_appropriate', models.CharField(default=b'YES', max_length=255, choices=[(b'YES', b'OK for everybody'), (b'NO', b"Don't even think about it..."), (b'ASK', b'Ask'), (b'WITHINSPACE', b'Within the Hackerspace')])),
+                ('usage_inappropriate', models.CharField(default=b'ASK', max_length=255, choices=[(b'YES', b'OK for everybody'), (b'NO', b"Don't even think about it..."), (b'ASK', b'Ask'), (b'WITHINSPACE', b'Within the Hackerspace')])),
+                ('usage_investigate', models.CharField(default=b'ASK', max_length=255, choices=[(b'YES', b'OK for everybody'), (b'NO', b"Don't even think about it..."), (b'ASK', b'Ask'), (b'WITHINSPACE', b'Within the Hackerspace')])),
+                ('usage_alter', models.CharField(default=b'ASK', max_length=255, choices=[(b'YES', b'OK for everybody'), (b'NO', b"Don't even think about it..."), (b'ASK', b'Ask'), (b'WITHINSPACE', b'Within the Hackerspace')])),
+                ('usage_takeaway', models.CharField(default=b'NO', max_length=255, choices=[(b'YES', b'OK for everybody'), (b'NO', b"Don't even think about it..."), (b'ASK', b'Ask'), (b'WITHINSPACE', b'Within the Hackerspace')])),
+                ('usage_exploit', models.CharField(default=b'NO', max_length=255, choices=[(b'YES', b'OK for everybody'), (b'NO', b"Don't even think about it..."), (b'ASK', b'Ask'), (b'WITHINSPACE', b'Within the Hackerspace')])),
+                ('usage_terms', models.TextField(blank=True)),
+                ('mounted', models.BooleanField()),
+                ('location_hint', models.CharField(max_length=255, blank=True)),
+                ('description', models.TextField(blank=True)),
+                ('label_created', models.DateTimeField(null=True, editable=False, blank=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='InventoryOwnershipResponsibility',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('is_owner', models.BooleanField()),
+                ('inventory', models.ForeignKey(to='items.Inventory')),
+                ('person', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='InventoryPhoto',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('image', models.ImageField(upload_to=photologue.models.get_storage_path, verbose_name='image')),
+                ('date_taken', models.DateTimeField(verbose_name='date taken', null=True, editable=False, blank=True)),
+                ('view_count', models.PositiveIntegerField(default=0, verbose_name='view count', editable=False)),
+                ('crop_from', models.CharField(default=b'center', max_length=10, verbose_name='crop from', blank=True, choices=[(b'top', 'Top'), (b'right', 'Right'), (b'bottom', 'Bottom'), (b'left', 'Left'), (b'center', 'Center (Default)')])),
+                ('title', models.CharField(max_length=50, verbose_name='title', blank=True)),
+                ('caption', models.TextField(verbose_name='caption', blank=True)),
+                ('date_added', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date added')),
+                ('effect', models.ForeignKey(related_name='inventoryphoto_related', verbose_name='effect', blank=True, to='photologue.PhotoEffect', null=True)),
+                ('inventory', models.ForeignKey(to='items.Inventory')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='InventoryType',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(help_text=b'Ex: Digital Storage Oscilosope', max_length=255, verbose_name=b'Inventory Type')),
+                ('description', models.TextField(blank=True)),
+                ('lft', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('rght', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('tree_id', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('level', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('parent', mptt.fields.TreeForeignKey(related_name='children', blank=True, to='items.InventoryType', help_text=b'', null=True, verbose_name=b'Is subtype of ')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model, items.models.MPTTModelMixin),
+        ),
+        migrations.CreateModel(
+            name='Location',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(help_text=b'Ex: Someones Crate', max_length=255, verbose_name=b'Location Name')),
+                ('description_short', models.CharField(help_text=b'Short description whats in the crate. Used for labels and stuff.', max_length=255, verbose_name=b'Description (Brief)')),
+                ('description', models.TextField(blank=True)),
+                ('loc_type', models.CharField(max_length=255, verbose_name=b'Location Type', choices=[(b'CRATE', b'Crate'), (b'SHELF', b'Shelf'), (b'ROOM', b'Room'), (b'MAGAZINE', b'Magazine')])),
+                ('uuid', models.UUIDField(verbose_name=b'UUID', editable=False, blank=True)),
+                ('label_created', models.DateTimeField(null=True, editable=False, blank=True)),
+                ('lft', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('rght', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('tree_id', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('level', models.PositiveIntegerField(editable=False, db_index=True)),
+                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('parent', mptt.fields.TreeForeignKey(related_name='children', verbose_name=b'Is stored in ', blank=True, to='items.Location', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model, items.models.MPTTModelMixin),
+        ),
+        migrations.CreateModel(
+            name='LocationPhoto',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('image', models.ImageField(upload_to=photologue.models.get_storage_path, verbose_name='image')),
+                ('date_taken', models.DateTimeField(verbose_name='date taken', null=True, editable=False, blank=True)),
+                ('view_count', models.PositiveIntegerField(default=0, verbose_name='view count', editable=False)),
+                ('crop_from', models.CharField(default=b'center', max_length=10, verbose_name='crop from', blank=True, choices=[(b'top', 'Top'), (b'right', 'Right'), (b'bottom', 'Bottom'), (b'left', 'Left'), (b'center', 'Center (Default)')])),
+                ('title', models.CharField(max_length=50, verbose_name='title', blank=True)),
+                ('caption', models.TextField(verbose_name='caption', blank=True)),
+                ('date_added', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date added')),
+                ('effect', models.ForeignKey(related_name='locationphoto_related', verbose_name='effect', blank=True, to='photologue.PhotoEffect', null=True)),
+                ('location', mptt.fields.TreeForeignKey(to='items.Location')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.AddField(
+            model_name='inventory',
+            name='location',
+            field=mptt.fields.TreeForeignKey(to='items.Location', null=True),
+        ),
+        migrations.AddField(
+            model_name='inventory',
+            name='persons',
+            field=models.ManyToManyField(to=settings.AUTH_USER_MODEL, through='items.InventoryOwnershipResponsibility'),
+        ),
+        migrations.AddField(
+            model_name='inventory',
+            name='related_items',
+            field=models.ManyToManyField(related_name='_related_items_+', to='items.Inventory', blank=True),
+        ),
+        migrations.AddField(
+            model_name='inventory',
+            name='type',
+            field=mptt.fields.TreeForeignKey(to='items.InventoryType'),
+        ),
+        migrations.AlterUniqueTogether(
+            name='inventoryownershipresponsibility',
+            unique_together=set([('person', 'inventory')]),
+        ),
+    ]

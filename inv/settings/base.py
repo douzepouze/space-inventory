@@ -48,7 +48,6 @@ THIRD_PARTY_APPS = (
     'bootstrap3',
     # Photologue
     'photologue',
-    'south',
     'sortedm2m',
     'mptt',
     'markdown_deux'
