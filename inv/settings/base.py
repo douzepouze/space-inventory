@@ -50,7 +50,7 @@ THIRD_PARTY_APPS = (
     'photologue',
     'sortedm2m',
     'mptt',
-    'markdown_deux'
+    'markdown_tag'
 )
 
 LOCAL_APPS = (

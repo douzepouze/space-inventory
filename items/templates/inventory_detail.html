@@ -3,7 +3,7 @@
 {% load admin_urls %}
 {% load mptt_tags %}
 {% load items_tags %}
-{% load markdown_deux_tags %}
+{% load markdown_tags %}
 
 {% block content %}
 <div class="row">
@@ -24,10 +24,8 @@
                 <a href="{% url 'admin:items_inventory_change' inventory.id %}" class="btn btn-primary" role="button">Edit</a>
             {% endif %}</h1>
 
+       {{ inventory.description|markdown }}
 
-{#        {% parse_rst inventory.description descheader %}#}
-{#        {{ descheader }}#}
-        {{ inventory.description|markdown }}
         <h2 id="inventory-photos">Photos</h2>
         <div class="row">
             {% for photo in inventory.inventoryphoto_set.all %}
@@ -58,7 +56,7 @@
      <div class="panel panel-default">
             <div class="panel-heading">Terms of Use</div>
                        <div class="panel-body">
-                {{ inventory.usage_terms }}
+                {{ inventory.usage_terms|markdown }}
             </div>
              <table class="table overflowable">
                  <thead>
